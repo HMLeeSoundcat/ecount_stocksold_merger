@@ -4,7 +4,7 @@ import sys
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import filedialog
-from tkinterdnd2 import DND_FILES, TkinterDnD
+from tkinterdnd2 import TkinterDnD, DND_FILES
 import subprocess
 import os
 from collections import OrderedDict
@@ -118,16 +118,18 @@ def open_file_dialog(index):
 			file_entry1.insert(0, file_path)
 
 def select_folder():
-	folder_path = filedialog.askdirectory()
+	folder_path = filedialog.asksaveasfilename(initialfile="새로운 엑셀문서",defaultextension=".xlsx")
+	if not folder_path:
+		return
 	target_folder = folder_path
-	writer = pd.ExcelWriter(target_folder+"/output.xlsx", engine='xlsxwriter')
+	writer = pd.ExcelWriter(target_folder, engine='xlsxwriter')
 	df_result.to_excel(writer, index=False, sheet_name='Sheet1')
 	writer.close()
 
-	subprocess.call('open "{}"'.format(target_folder+"/output.xlsx"), shell=True)
+	subprocess.call('open "{}"'.format(target_folder), shell=True)
 
 def on_drop(event, entry):
-	file_path = event.data
+	file_path = event.data.replace("{", "").replace("}", "")  # 중괄호 제거
 	entry.delete(0, tk.END)
 	entry.insert(0, file_path)
 	
@@ -154,6 +156,7 @@ file_entry1.pack(fill=tk.X)
 
 file_entry1.drop_target_register(DND_FILES)
 file_entry1.dnd_bind('<<Drop>>', lambda event, entry=file_entry1: on_drop(event, entry))
+
 
 button = tk.Button(root, text="작업 시작", command=run_script)
 button.pack()
